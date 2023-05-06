@@ -1,4 +1,4 @@
-name: Swagger Validator
+name: Swagger-cli test
 
 on:
   push:
@@ -6,23 +6,23 @@ on:
       - main
 
 jobs:
-  validate:
+  validate-specs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install swagger-cli
+        run: npm install -g swagger-cli
 
-      - name: Validate Swagger files
+      - name: Validate OpenAPI specs
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            result=$(swagger-cli validate "$file")
-            if [ $? -ne 0 ]; then
+            if ! swagger-cli validate "$file"; then
               echo "Validation failed for $file"
-              echo "$result"
+              swagger-cli validate "$file" 2>&1 | sed 's/^/  /'
               exit 1
             fi
           done
+
