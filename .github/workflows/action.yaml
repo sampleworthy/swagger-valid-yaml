@@ -19,10 +19,17 @@ jobs:
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            if swagger-cli validate --verbose "$file"; then
+            if swagger-cli validate --verbose "$file" > "$file.log" 2>&1; then
               echo "Validation succeeded for $file"
             else
-              error_message=$(swagger-cli validate --verbose "$file" 2>&1)
-              echo "::error file=$file::Validation failed for $file - $error_message"
+              echo "::error file=$file::Validation failed for $file"
             fi
           done
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: validation-logs
+          path: |
+            examples/*.log
