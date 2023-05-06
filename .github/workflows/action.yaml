@@ -1,3 +1,5 @@
+name: Swagger-cli test
+
 on:
   push:
     branches:
@@ -9,18 +11,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Install Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Install papaparse-swagger
-        run: npm install papaparse-swagger
-
+      - name: Install swagger-cli
+        run: npm install -g swagger-cli
       - name: Validate OpenAPI specs
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            papaparse-swagger validate "$file" || echo "::error file=$file::Validation failed for $file"
+            swagger-cli validate "$file" || echo "::warning file=$file::Validation failed for $file"
           done
+      - name: List validation errors
+        run: |
+          echo "Validation errors:"
+          grep "::warning file=examples/" $GITHUB_WORKSPACE/*.log | sed -e 's/.*warning file=//' -e 's/::.*//' | sort -u | while read file; do
+            echo "- $file"
+            grep "::warning file=$file::" $GITHUB_WORKSPACE/*.log | sed -e 's/::.*//' -e 's/^.*warning /  - /' | sort -u
+          done || true
