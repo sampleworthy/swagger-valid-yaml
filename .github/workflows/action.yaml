@@ -6,19 +6,20 @@ on:
       - main
 
 jobs:
-  validate-openapi:
+  validate-specs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Validate OpenAPI specs using Swagger Online Editor
+      - name: Validate OpenAPI specs
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            response=$(curl -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"spec\": \"$(cat $file | sed 's/\"/\\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')\"}" https://validator.swagger.io/validator/debug)
-            if [ "$(echo "$response" | jq '.schemaValidationMessages | length')" -gt 0 ]; then
-              echo "::error file=$file::Validation failed for $file"
-              echo "$response" | jq .
+            response=$(curl -H "Content-Type: application/json" -X POST -d @$file https://validator.swagger.io/validator)
+            if [[ $response == *"\"schemaValidationMessages\""* ]]; then
+              echo "::error file=$file::$response"
+            else
+              echo "::debug file=$file::$response"
             fi
           done
