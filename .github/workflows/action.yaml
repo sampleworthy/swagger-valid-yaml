@@ -1,27 +1,37 @@
 name: Validate OpenAPI Specs
 
 on:
+
   push:
+
     branches:
+
       - main
 
 jobs:
+
   validate-specs:
+
     runs-on: ubuntu-latest
+
     steps:
+
       - name: Checkout code
+
         uses: actions/checkout@v2
-      
+
       - name: Install swagger-cli
+
         run: npm install -g @apidevtools/swagger-cli
-      
+
       - name: Validate OpenAPI specs
+
         run: |
+
           for file in examples/*.yaml; do
+
             echo "Validating $file..."
-            result=$(swagger-cli validate --json "$file" 2>&1) || echo "::error file=$file::Validation failed for $file"
-            if [[ "$result" != "[]" ]]; then
-              echo "$result" | jq '.[] | {message, path, line: .range.start.line, column: .range.start.column}' | jq -s
-              exit 1
-            fi
+
+            swagger-cli validate "$file" || echo "::error file=$file::Validation failed for $file"
+
           done
