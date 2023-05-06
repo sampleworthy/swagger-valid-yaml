@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  validate-openapi-specs:
+  validate-specs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,5 +19,5 @@ jobs:
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            swagger-cli validate "$file" || (echo "Validation failed for $file"; swagger-cli validate "$file" --json | jq '.')
+            swagger-cli validate "$file" || (echo "Validation failed for $file"; swagger-cli validate "$file" --json)
           done
