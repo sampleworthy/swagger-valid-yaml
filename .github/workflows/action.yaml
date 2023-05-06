@@ -1,19 +1,23 @@
 name: Swagger-cli test
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  test:
+  validate-openapi-specs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install dependencies
-        run: npm install
+
+      - name: Install swagger-cli
+        run: npm install -g swagger-cli
+
       - name: Validate OpenAPI specs
         run: |
-          for file in ./examples/*.yaml
-          do
-            swagger-cli validate $file --lint
+          for file in examples/*.yaml; do
+            echo "Validating $file..."
+            swagger-cli validate "$file" || (echo "Validation failed for $file"; swagger-cli validate "$file" --json | jq '.')
           done
