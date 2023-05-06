@@ -19,13 +19,9 @@ jobs:
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            if swagger-cli validate --debug "$file"; then
+            if swagger-cli validate --verbose "$file"; then
               echo "Validation succeeded for $file"
             else
-              echo "Validation failed for $file"
-              echo "------------------------"
-              cat "${file}.log"
-              echo "------------------------"
               echo "::error file=$file::Validation failed for $file"
             fi
           done
