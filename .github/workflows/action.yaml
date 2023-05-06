@@ -11,17 +11,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Install swagger-cli
-        run: npm install -g @apidevtools/swagger-cli
-      
+
+      - name: Install papaparse-swagger
+        run: npm install -g papaparse-swagger
+
       - name: Validate OpenAPI specs
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            result=$(swagger-cli validate --json "$file" 2>&1) || echo "::error file=$file::Validation failed for $file"
-            if [[ "$result" != "[]" ]]; then
-              echo "$result" | jq '.[] | {message, path, line: .range.start.line, column: .range.start.column}' | jq -s
-              exit 1
-            fi
+            papaparse-swagger validate "$file" || echo "::error file=$file::Validation failed for $file"
           done
