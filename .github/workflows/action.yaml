@@ -1,4 +1,4 @@
-name: Swagger-cli test
+name: Swagger Online Editor Validation
 
 on:
   push:
@@ -6,23 +6,23 @@ on:
       - main
 
 jobs:
-  validate-specs:
+  validate-openapi-specs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install swagger-cli
-        run: npm install -g swagger-cli
-      - name: Validate OpenAPI specs
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y curl
+      - name: Validate OpenAPI specs with Swagger Online Editor
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            swagger-cli validate "$file" || echo "::warning file=$file::Validation failed for $file"
+            curl --location --request POST 'https://editor.swagger.io/api/validate' \
+            --header 'Content-Type: application/yaml' \
+            --data-binary "@$file" \
+            --fail \
+            --show-error \
+            --silent || echo "::error file=$file::Validation failed for $file"
           done
-      - name: List validation errors
-        run: |
-          echo "Validation errors:"
-          grep "::warning file=examples/" $GITHUB_WORKSPACE/*.log | sed -e 's/.*warning file=//' -e 's/::.*//' | sort -u | while read file; do
-            echo "- $file"
-            grep "::warning file=$file::" $GITHUB_WORKSPACE/*.log | sed -e 's/::.*//' -e 's/^.*warning /  - /' | sort -u
-          done || true
