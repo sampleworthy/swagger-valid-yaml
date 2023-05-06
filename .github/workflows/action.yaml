@@ -1,4 +1,4 @@
-name: Swagger Online Editor Validation
+name: Swagger Validator
 
 on:
   push:
@@ -6,20 +6,23 @@ on:
       - main
 
 jobs:
-  validate-specs:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Validate OpenAPI specs
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate Swagger files
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            response=$(curl -H "Content-Type: application/json" -X POST -d @$file https://validator.swagger.io/validator)
-            if [[ $response == *"\"schemaValidationMessages\""* ]]; then
-              echo "::error file=$file::$response"
-            else
-              echo "::debug file=$file::$response"
+            result=$(swagger-cli validate "$file")
+            if [ $? -ne 0 ]; then
+              echo "Validation failed for $file"
+              echo "$result"
+              exit 1
             fi
           done
