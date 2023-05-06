@@ -1,17 +1,15 @@
 name: Validate YAML files using char0n/swagger-editor-validate@v1
 
-on:
-  push:
-    branches: [main]
+on: [push]
 
 jobs:
-  validate:
+  test_swagger_editor_validator_remote:
     runs-on: ubuntu-latest
+    name: Swagger Editor Validator Remote
+
     steps:
       - uses: actions/checkout@v2
-
-      - name: Validate YAML files
+      - name: Validate OpenAPI definition
         uses: char0n/swagger-editor-validate@v1
         with:
-          definition-file: examples/*.yaml
-          detailed-output: true
+          definition-file: examples/openapi.yaml
