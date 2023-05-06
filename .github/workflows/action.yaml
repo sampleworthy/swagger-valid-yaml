@@ -6,23 +6,19 @@ on:
       - main
 
 jobs:
-  validate-openapi-specs:
+  validate-openapi:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install dependencies
-        run: |
-          sudo apt-get update && \
-          sudo apt-get install -y curl
-      - name: Validate OpenAPI specs with Swagger Online Editor
+
+      - name: Validate OpenAPI specs using Swagger Online Editor
         run: |
           for file in examples/*.yaml; do
             echo "Validating $file..."
-            curl --location --request POST 'https://editor.swagger.io/api/validate' \
-            --header 'Content-Type: application/yaml' \
-            --data-binary "@$file" \
-            --fail \
-            --show-error \
-            --silent || echo "::error file=$file::Validation failed for $file"
+            response=$(curl -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"spec\": \"$(cat $file | sed 's/\"/\\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')\"}" https://validator.swagger.io/validator/debug)
+            if [ "$(echo "$response" | jq '.schemaValidationMessages | length')" -gt 0 ]; then
+              echo "::error file=$file::Validation failed for $file"
+              echo "$response" | jq .
+            fi
           done
